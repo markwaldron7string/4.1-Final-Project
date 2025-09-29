@@ -2,78 +2,85 @@
   <html>
     <head>
       <meta charset="UTF-8">
-      <link rel="stylesheet" href="styles.css">
-      <script src="app.js"></script>
       <title>Recipe Search App</title>
+      <link rel="stylesheet" href="styles.css">
     </head>
     <body>
     <div class="container">
       <h1>Recipe Search</h1>
       <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search for delicious recipes..." onkeyup="search()">
+        <input type="text" id="searchInput" placeholder="Search for delicious recipes...">
         <button id="searchButton">Search</button>
       </div>
-      <div id="results">
-        <div class="recipe">
-          <h3>Roasted Peppers, Spinach & Feta Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/658615-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Rustic Grilled Peaches Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/658920-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Pizza Bites with Pumpkin</h3>
-          <img src="https://img.spoonacular.com/recipes/656329-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>BLT Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/680975-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Plantain Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/716300-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Zucchini Pizza Boats</h3>
-          <img src="https://img.spoonacular.com/recipes/665769-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Pepperoni Pizza Muffins</h3>
-          <img src="https://img.spoonacular.com/recipes/655698-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Easy Cheesy Pizza Casserole</h3>
-          <img src="https://img.spoonacular.com/recipes/641893-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Paneer & Fig Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/654523-312x231.jpg">
-        </div>
-        <div class="recipe">
-          <h3>Pesto Veggie Pizza</h3>
-          <img src="https://img.spoonacular.com/recipes/655847-312x231.jpg">
-        </div>
-      </div>
+
+      <div id="results"></div>
     </div>
 
-<script type="text/javascript">
-function search() {
-let filter = document.getElementById('searchInput').value.toUpperCase();
-let item = document.querySelectorAll('.recipe');
-let l = document.getElementsByTagName('h3');
-for(var i = 0;i<=l.length;i++){
-let a=item[i].getElementsByTagName('h3')[0];
-let value=a.innerHTML || a.innerText || a.textContent;
-if(value.toUpperCase().indexOf(filter) > -1) {
-item[i].style.display="";
-}
-else
-{
-item[i].style.display="none";
-}
-}
-}
-</script>
-</body>
+    <script>
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const resultsDiv = document.getElementById('results');
+
+      searchButton.addEventListener('click', searchRecipes);
+
+      searchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          searchRecipes();
+        }
+      });
+
+      function searchRecipes() {
+        const query = searchInput.value.trim();
+        if (!query) {
+          alert('Please enter a search term.');
+          return;
+        }
+        const apiKey = '8fd10763769f47de8d36549896f64e86';
+        const apiUrl = `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=5&addRecipeNutrition=true&apiKey=${apiKey}`;
+
+        resultsDiv.innerHTML = '<p>Searching for recipes...</p>';
+
+        fetch(apiUrl)
+          .then(response => response.json())
+          .then(data => {
+            resultsDiv.innerHTML = '';
+            if (!data.results || data.results.length === 0) {
+              resultsDiv.innerHTML = '<div class="no-results">No recipes found. Try a different search term!</div>';
+              return;
+            }
+            data.results.forEach(recipe => {
+              const title = recipe.title;
+              const image = recipe.image;
+              let calories = '', protein = '', fat = '', carbs = '';
+              if (recipe.nutrition && recipe.nutrition.nutrients) {
+                const nutrients = recipe.nutrition.nutrients;
+                const calInfo = nutrients.find(n => n.name === 'Calories');
+                const proteinInfo = nutrients.find(n => n.name === 'Protein');
+                const fatInfo = nutrients.find(n => n.name === 'Fat');
+                const carbsInfo = nutrients.find(n => n.name === 'Carbohydrates');
+                if (calInfo) calories = Math.round(calInfo.amount) + ' ' + calInfo.unit;
+                if (proteinInfo) protein = Math.round(proteinInfo.amount) + ' ' + proteinInfo.unit;
+                if (fatInfo) fat = Math.round(fatInfo.amount) + ' ' + fatInfo.unit;
+                if (carbsInfo) carbs = Math.round(carbsInfo.amount) + ' ' + carbsInfo.unit;
+              }
+              const recipeDiv = document.createElement('div');
+              recipeDiv.className = 'recipe';
+              recipeDiv.innerHTML = `
+            <h3>${title}</h3>
+            <img src="${image}" alt="${title}">
+            <p><strong>Calories:</strong> ${calories}</p>
+            <p><strong>Carbs:</strong> ${carbs}</p>
+            <p><strong>Protein:</strong> ${protein}</p>
+            <p><strong>Fat:</strong> ${fat}</p>
+          `;
+              resultsDiv.appendChild(recipeDiv);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching recipes:', error);
+            resultsDiv.innerHTML = '<div class="error">Error fetching recipes. Please try again later.</div>';
+          });
+      }
+    </script>
+  </body>
 </html>
