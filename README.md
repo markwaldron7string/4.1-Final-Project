@@ -1,1 +1,2 @@
 # 4.1-Final-Project
+Recipe Search App: use the search bar to enter any main ingredient (i.e. pizza, chicken, steak) and find a list of recipes containing that ingredient. Then you can narrow down the results by calories with the slider bar. The calorie slider goes from 0-3000, and it filters recipes containing less than or equal to the number of calories selected.
